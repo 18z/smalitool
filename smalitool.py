@@ -80,7 +80,13 @@ def parse_info_cmd(args):
 
 
 def find_class_file(args):
-    for root, dirs, files in os.walk(os.getcwd()):
+    # If not path is given take the current directory of the script caller
+    if args.path:
+        path = args.path
+    else:
+        path = os.getcwd()
+
+    for root, dirs, files in os.walk(path):
         for file in files:
             fname = os.path.join(root, file)
             if not fname.endswith('.smali'):
@@ -95,7 +101,13 @@ def find_class_file(args):
                     
 
 def find_caller(args):
-    for root, dirs, files in os.walk(os.getcwd()):
+    # If not path is given take the current directory of the script caller
+    if args.path:
+        path = args.path
+    else:
+        path = os.getcwd()
+
+    for root, dirs, files in os.walk(path):
         for file in files:
             fname = os.path.join(root, file)
             if not fname.endswith('.smali'):
@@ -128,7 +140,6 @@ def find_caller(args):
                 print "FILE:", fname
                 for c in caller:
                     print "Line " + str(c[0]) + ": " + c[1]
-                print "\n"
 
 def parse_find_cmd(args):
     if args.callee:
@@ -155,7 +166,8 @@ if __name__ == "__main__":
     find_parser = subparsers.add_parser('find', help="Find smali file containing given class.")
     find_parser.add_argument('name', help="The name of the class that is seeked.")
     find_parser.add_argument('-c', '--callee', action='store', help="Given method name, find all callers of class->method.")
-    # TODO: Option to find callers of method of class
+    find_parser.add_argument('-p', '--path', action='store', help="Path to directory that shall be searched.")
+
     
     # Parse arguments
     args = parser.parse_args()
