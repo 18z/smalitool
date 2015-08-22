@@ -22,4 +22,4 @@ from the root search directory.
 
 If you want to find all callers of a method bar of a class foo then type
 
-    ./smalitool.py find foo -c bar
+    ./smalitool.py find foo --callee bar
