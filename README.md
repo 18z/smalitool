@@ -16,10 +16,10 @@ You can quickly extract the method declaration of a method foo from test.smali w
 ### Searching through .smali files
 Smalitool can also be used to search through folders of smali files to find a class declaration by calling
 
-    ./smalitool.py find class_name
+    ./smalitool.py find class_name --path path/to/search/dir
 
-from the root search directory.
+If no path is given, then the script caller's current directory will be used as the search directory root.
 
 If you want to find all callers of a method bar of a class foo then type
 
-    ./smalitool.py find foo --callee bar
+    ./smalitool.py find foo --callee bar --path path/to/search/dir
