@@ -79,7 +79,7 @@ def parse_info_cmd(args):
         results = inspect_method(args.inspect, fcontent)
 
 
-def parse_find_cmd(args):
+def find_class_file(args):
     for root, dirs, files in os.walk(os.getcwd()):
         for file in files:
             fname = os.path.join(root, file)
@@ -92,6 +92,49 @@ def parse_find_cmd(args):
             res = find_declarations_in_file(fcontent, SMALI_CLASS)
             if args.name in res[0]:
                 print args.name, "found in", fname
+                    
+
+def find_caller(args):
+    for root, dirs, files in os.walk(os.getcwd()):
+        for file in files:
+            fname = os.path.join(root, file)
+            if not fname.endswith('.smali'):
+                continue
+            f = open(fname, 'r')
+            fcontent = f.readlines()
+            f.close()
+            fcontent = [x[:-1] for x in fcontent]
+
+            search_str = args.name + ";->" + args.callee
+
+            # Find all lines in current file that invoke class;->method
+            li = []
+            for i in xrange(len(fcontent)):
+                if 'invoke' in fcontent[i] and search_str in fcontent[i]:
+                    li.append(i) 
+                
+            # Find the first method above the text line where the call was found
+            caller = []
+            for i in li:
+                cur_line = i
+                while cur_line > 0: # Should always leave the loop...I think
+                    if fcontent[cur_line].startswith(SMALI_METHOD_START):
+                        if not (cur_line+1, fcontent[cur_line]) in caller:
+                            caller.append((cur_line+1, fcontent[cur_line]))
+                        break
+                    cur_line = cur_line -1
+
+            if len(caller) > 0:
+                print "FILE:", fname
+                for c in caller:
+                    print "Line " + str(c[0]) + ": " + c[1]
+                print "\n"
+
+def parse_find_cmd(args):
+    if args.callee:
+        find_caller(args)
+    else:
+        find_class_file(args)
             
 
 commands = {'info':parse_info_cmd, 'find':parse_find_cmd}
@@ -110,7 +153,8 @@ if __name__ == "__main__":
     group.add_argument('-i', '--inspect', help="Display source code given method.")
 
     find_parser = subparsers.add_parser('find', help="Find smali file containing given class.")
-    find_parser.add_argument('name', help="The name of the class that seeked.")
+    find_parser.add_argument('name', help="The name of the class that is seeked.")
+    find_parser.add_argument('-c', '--callee', action='store', help="Given method name, find all callers of class->method.")
     # TODO: Option to find callers of method of class
     
     # Parse arguments
