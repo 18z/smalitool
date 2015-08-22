@@ -11,7 +11,7 @@ Smalitool allows a user to extract the class, fields, methods, interfaces, and a
 
 You can quickly extract the method declaration of a method foo from test.smali with 
 
-    ./smalitool.py info test.smali -i foo
+    ./smalitool.py info test.smali --inspect foo
 
 ### Searching through .smali files
 Smalitool can also be used to search through folders of smali files to find a class declaration by calling
