@@ -97,10 +97,15 @@ def find_class_file(args):
             fcontent = [x[:-1] for x in fcontent]
             res = find_declarations_in_file(fcontent, SMALI_CLASS)
             if args.name in res[0]:
-                print args.name, "found in", fname
+                print fname
                     
 
 def find_caller(args):
+
+    # Check whether first parameter of -c is a valid declaration type
+    if args.callee[0] not in [METHOD_ARG, FIELD_ARG]:
+        parser.error('-c first parameter must be in {' + METHOD_ARG  + ', '+ FIELD_ARG + '}')
+
     # If not path is given take the current directory of the script caller
     if args.path:
         path = args.path
@@ -117,14 +122,17 @@ def find_caller(args):
             f.close()
             fcontent = [x[:-1] for x in fcontent]
 
-            search_str = args.name + ";->" + args.callee
+            search_str = args.name + ";->" + args.callee[1]
 
             # Find all lines in current file that invoke class;->method
             li = []
             for i in xrange(len(fcontent)):
-                if 'invoke' in fcontent[i] and search_str in fcontent[i]:
+                if 'invoke' in fcontent[i] and search_str in fcontent[i] and args.callee[0] == METHOD_ARG:
                     li.append(i) 
+                if ('iput' in fcontent[i] or 'iget' in fcontent[i] or 'sput' in fcontent[i] or 'sget' in fcontent[i]) and search_str in fcontent[i] and args.callee[0] == FIELD_ARG:
+                    li.append(i)
                 
+
             # Find the first method above the text line where the call was found
             caller = []
             for i in li:
@@ -156,16 +164,20 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     subparsers = parser.add_subparsers(dest='command')
-    info_parser = subparsers.add_parser('info', help="Show information for given smali file.")
 
+    # Info subparser
+    info_parser = subparsers.add_parser('info', help="Show information for given smali file.")
     group = info_parser.add_mutually_exclusive_group()
     info_parser.add_argument('file', type=argparse.FileType('rt'), help="Smali file that shall be parsed.")
     group.add_argument('-s', '--show', choices=(CLASS_ARG, METHOD_ARG, FIELD_ARG, INTERFACE_ARG, ANNOTATION_ARG), help="Show all declarations of specified type.")
     group.add_argument('-i', '--inspect', help="Display source code given method.")
 
-    find_parser = subparsers.add_parser('find', help="Find smali file containing given class.")
+    # Find subparser
+    find_parser = subparsers.add_parser('find', help="Search through smali files.")
     find_parser.add_argument('name', help="The name of the class that is seeked.")
-    find_parser.add_argument('-c', '--callee', action='store', help="Given method name, find all callers of class->method.")
+    
+    # -c {method, field} name
+    find_parser.add_argument('-c', '--callee', action='store', nargs=2, help="Given {method, field} and a name, find all callers of name from class.")
     find_parser.add_argument('-p', '--path', action='store', help="Path to directory that shall be searched.")
 
     
